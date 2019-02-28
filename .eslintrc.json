@@ -14,6 +14,7 @@
     },
     "rules": {
         "semi": "warn",
-        "space-before-function-paren": "off"
+        "space-before-function-paren": "off",
+        "camelcase":"off"
     }
 }
