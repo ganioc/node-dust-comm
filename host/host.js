@@ -1,14 +1,42 @@
-// host code
+'use strict'
 
+var EE = require('events');
+var util = require('util');
 var net = require('net');
+var Machine = require('./conn');
 
-var PORT = 12405
+function HJHost() {
+  EE.call(this);
+  this.name = 'HJHost'
+  this.socket = null;
+  this.machineLst = [];
+  this.maxId = 0;
+}
 
-var socket;
+util.inherits(HJHost, EE);
 
-function startServer() {
-  socket = net.createServer(function (connection) {
+HJHost.prototype.init = function (options) {
+  this.startServer(options)
+}
+HJHost.prototype.addMachine = function (conn) {
+  this.machineLst.push(conn);
+  console.log(this.machineLst)
+}
+
+HJHost.prototype.removeMachine = function (conn) {
+  var ind = this.machineLst.indexOf(conn);
+  if (ind >= 0) {
+    this.machineLst.splice(ind, 1);
+  }
+  console.log(this.machineLst)
+}
+
+HJHost.prototype.startServer = function (options) {
+  var that = this;
+  this.socket = net.createServer(function (connection) {
     console.log('connected');
+
+    that.addMachine(connection)
 
     connection.on('data', function (data) {
       console.log('RX', data);
@@ -20,28 +48,30 @@ function startServer() {
     })
     connection.on('close', function () {
       console.log('connection closed')
+      that.removeMachine(connection);
     })
   })
-
-  socket.listen({
-    port: PORT,
+  this.socket.listen({
+    port: options.PORT,
     host: '0.0.0.0'
   }, function () {
-    console.log('server listen on:', PORT)
+    console.log('server listen on:', options.PORT)
   })
 
-  socket.on('error', function (err) {
+  this.socket.on('error', function (err) {
     console.log('Error:', err)
   })
 
-  socket.on('close', function () {
+  this.socket.on('close', function () {
     console.log('Server closed');
     setTimeout(function () {
-      startServer()
+      that.startServer()
     }, 5000);
 
     console.log('Restart server ...')
   })
 }
 
-startServer()
+module.exports = {
+  HJHost: HJHost
+}
