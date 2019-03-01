@@ -3,7 +3,9 @@
 var EE = require('events');
 var util = require('util');
 var net = require('net');
-var Machine = require('./conn').Machine;
+var Machine = require('./machine').Machine;
+var SESSION = require('../lib/hj212/session')
+// var FRAME = require('./frame').FrameClass;
 
 function HJHost() {
   EE.call(this);
@@ -11,6 +13,8 @@ function HJHost() {
   this.socket = null;
   this.machineLst = [];
   this.maxId = 0;
+
+  this.sessions = new SESSION.SessionClass();
 }
 
 util.inherits(HJHost, EE);
@@ -18,9 +22,9 @@ util.inherits(HJHost, EE);
 HJHost.prototype.init = function (options) {
   this.startServer(options)
 }
-HJHost.prototype.showMachine = function(){
+HJHost.prototype.showMachine = function () {
   console.log('Print machine list -----')
-  for(var i = 0; i< this.machineLst.length; i++){
+  for (var i = 0; i < this.machineLst.length; i++) {
     var obj = this.machineLst[i];
     console.log('\nid:', obj.id)
     console.log('name:', obj.name)
@@ -48,10 +52,9 @@ HJHost.prototype.removeMachine = function (id) {
   }
   if (i < this.machineLst.length) {
     // delete this.machineLst[i];
-	  this.machineLst.splice(i,1);
+    this.machineLst.splice(i, 1);
   }
   // this.showMachine()
-
 }
 
 HJHost.prototype.startServer = function (options) {
@@ -95,6 +98,21 @@ HJHost.prototype.startServer = function (options) {
   })
 }
 
+HJHost.prototype.setOvertimeRecount = function (indexMachine, cb) {
+  if (indexMachine >= this.machineLst.length) {
+    cb(new Error('Failed connection index'))
+  }
+
+  // form packet
+  var packet = SESSION.createSetOvertimeRecount();
+
+  // send packet out
+  this.machineLst[indexMachine]
+    .write(SESSION.createFrame(packet), function () {});
+
+  // put packet to session queue
+  this.sessions.addSession()
+}
 module.exports = {
   HJHost: HJHost
 }

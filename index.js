@@ -16,8 +16,8 @@ machine.init({
   IP: IP
 });
 
-setInterval(function () {
-  machine.write('hello', function () {
-    console.log('machine write out');
-  });
-}, 5000);
+// setInterval(function () {
+//   machine.write('hello', function () {
+//     console.log('machine write out');
+//   });
+// }, 5000);
