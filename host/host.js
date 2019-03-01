@@ -3,7 +3,7 @@
 var EE = require('events');
 var util = require('util');
 var net = require('net');
-var Machine = require('./conn');
+var Machine = require('./conn').Machine;
 
 function HJHost() {
   EE.call(this);
@@ -18,6 +18,15 @@ util.inherits(HJHost, EE);
 HJHost.prototype.init = function (options) {
   this.startServer(options)
 }
+HJHost.prototype.showMachine = function(){
+  console.log('Print machine list -----')
+  for(var i = 0; i< this.machineLst.length; i++){
+    var obj = this.machineLst[i];
+    console.log('\nid:', obj.id)
+    console.log('name:', obj.name)
+    console.log('index:', i)
+  }
+}
 HJHost.prototype.addMachine = function (conn) {
   this.machineLst.push(new Machine({
     connection: conn,
@@ -28,6 +37,7 @@ HJHost.prototype.addMachine = function (conn) {
   console.log(conn.remoteAddress, ' ', conn.remotePort)
 
   conn.key = conn.remoteAddress + ':' + conn.remotePort
+  this.showMachine()
 }
 
 HJHost.prototype.removeMachine = function (id) {
@@ -37,8 +47,11 @@ HJHost.prototype.removeMachine = function (id) {
     }
   }
   if (i < this.machineLst.length) {
-    delete this.machineLst[i];
+    // delete this.machineLst[i];
+	  this.machineLst.splice(i,1);
   }
+  // this.showMachine()
+
 }
 
 HJHost.prototype.startServer = function (options) {
