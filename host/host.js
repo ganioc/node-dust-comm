@@ -20,7 +20,8 @@ HJHost.prototype.init = function (options) {
 }
 HJHost.prototype.addMachine = function (conn) {
   this.machineLst.push(conn);
-  console.log(this.machineLst)
+  // console.log(this.machineLst)
+  console.log(conn.remoteAddress, ' ', conn.remotePort)
 }
 
 HJHost.prototype.removeMachine = function (conn) {
