@@ -1,17 +1,17 @@
 'use strict'
 
 // var net = require('./lib/net');
-var CLIENT = require('./client').HJClient
+var CLIENT = require('./yclient').YClient
 
 // const
 var PORT = 12405
-var IP = '42.159.86.15'
+var IP = '127.0.0.1'
 
 console.log('hello world');
 
 var machine = new CLIENT();
 
-machine.init({
+machine.start({
   PORT: PORT,
   IP: IP
 });

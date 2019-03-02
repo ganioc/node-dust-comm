@@ -4,7 +4,7 @@ var EE = require('events');
 var util = require('util');
 var net = require('net');
 // var FRAME = require('./frame').FrameClass;
-var SESSION = require('../lib/hj212/session').SessionClass;
+var SESSION = require('../lib/hj212/sessionctrl').SessionClass;
 
 function HJClass() {
   EE.call(this);
