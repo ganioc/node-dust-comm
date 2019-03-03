@@ -24,17 +24,24 @@ function YHostSessionCtrl(options) {
   this.OverTime = 5000;
   this.ReCount = 3;
 
+  var that = this
+
   this.on('timeout', function (session) {
     console.log('\nYHostSessionctrl timeout: ----*')
 
     console.log(session.datasegment)
   })
+  this.on('finished', function (session) {
+    console.log('\nYHostSessionctrl session finished: ----%')
+    console.log(session.datasegment)
+  })
 
   // input data is a datasegment object
   this.sessions.on('packet', function (dataseg) {
-    console.log('\nReceived valid datasegment')
+    console.log('\nReceived valid datasegment ----->')
 
     // search the sessions list to find the waiting session
+    that.handleDataSegment(dataseg)
   })
 }
 util.inherits(YHostSessionCtrl, EE);
@@ -137,15 +144,25 @@ YHostSessionCtrl.prototype.sendReq = function (indMachine, paramObj, cb) {
   // save it to sessions
   this.sessions.addSession({
     // type: 'normal',
-    overtime: this.OverTime,
-    recount: this.ReCount,
+    overtime: COMMON.OVERTIME,
+    recount: COMMON.RECOUNT,
     callback: cb,
     datasegment: ds,
     handle: that,
     machineKey: that.machines[indMachine].key
   });
 }
-
+YHostSessionCtrl.prototype.handleDataSegment = function (ds) {
+  console.log('\nHandle received datasegment')
+  let session = this.sessions.findSession(ds)
+  if (session) {
+    console.log('Find session of datasegment')
+    // console.log(session)
+    session.handle(ds)
+  } else {
+    console.log('Cannot find datasegment')
+  }
+}
 module.exports = {
   YHostSessionCtrl: YHostSessionCtrl
 }
