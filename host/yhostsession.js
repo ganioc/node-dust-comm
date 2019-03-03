@@ -163,7 +163,7 @@ YHostSessionCtrl.prototype.setReq = function (indMachine, paramObj, cb) {
   // var packet = SESSIONCTRL.createDataSegmentDownlink(paramArr);
   // send out using indMachine
   this.machines[indMachine].connection.write(
-    SESSIONCTRL.createFrame(ds.output()),
+    ds.createFrame(),
     function () {
       console.log('packet sent out\n\n')
     }
@@ -180,6 +180,41 @@ YHostSessionCtrl.prototype.setReq = function (indMachine, paramObj, cb) {
     machineKey: that.machines[indMachine].key
   });
 }
+
+YHostSessionCtrl.prototype.setParam = function (indMachine, paramObj, cb) {
+  var that = this;
+
+  var ds = DS.createNormalDataSegment()
+  ds.setQN(COMMON.getFormattedTimestamp())
+  ds.setST(COMMON.getSTCode('SURFACE-WATER-ENV-CONTAM'))
+  ds.setCN(COMMON.getDownlinkCNCode('PARAM_SETTIME_REQ'))
+  ds.setPW(COMMON.PASSWORD)
+  ds.setMN(COMMON.UNIQID)
+  ds.setFlag(COMMON.setFlag(false, true))
+
+  var cp = CP.createCommandParam(paramObj);
+  ds.setCP(cp.output())
+
+  // send out using indMachine
+  this.machines[indMachine].connection.write(
+    ds.createFrame(),
+    function () {
+      console.log('packet sent out\n\n')
+    }
+  );
+
+  // save it to sessions
+  this.sessions.addSession({
+    type: SESSION.TYPE.PARAM_SET,
+    overtime: COMMON.OVERTIME,
+    recount: COMMON.RECOUNT,
+    callback: cb,
+    datasegment: ds,
+    handle: that,
+    machineKey: that.machines[indMachine].key
+  });
+}
+
 YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb) {
   var that = this;
 

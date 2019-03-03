@@ -28,6 +28,10 @@ function YClientSessionCtrl() {
       that.handleInitSettingReq(dataseg)
     } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_GETTIME_REQ'))) {
       that.handleGetParamReq(dataseg)
+    } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_SETTIME_REQ'))) {
+      that.handleSetParam(dataseg)
+    } else {
+      throw new Error('Un recognized CN')
     }
   });
 }
@@ -179,6 +183,42 @@ YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
   })
 }
 
+YClientSessionCtrl.prototype.handleSetParam = function (dataseg) {
+  var that = this
+
+  var newDs = DS.cloneDataSegment(dataseg)
+  newDs.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
+  newDs.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
+  newDs.setFlag(COMMON.setFlag(false, false))
+  var cp = CP.createCommandParam({
+    QNRtn: 1
+  });
+  newDs.setCP(cp.output());
+
+  that.write(newDs.createFrame(), function (err, data) {
+    if (err) {
+      console.log(err);
+      return -1
+    }
+    console.log('Send req rsp')
+  })
+
+  COMMON.setParam(dataseg, function () {
+    var ds2 = DS.cloneDataSegment(newDs)
+    ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
+    var cp = CP.createCommandParam({
+      ExeRtn: 1
+    })
+    ds2.setCP(cp.output())
+    that.write(ds2.createFrame(), function (err, data) {
+      if (err) {
+        console.log(err);
+        return -1
+      }
+      console.log('Send req result')
+    })
+  })
+}
 module.exports = {
   YClientSessionCtrl: YClientSessionCtrl
 }

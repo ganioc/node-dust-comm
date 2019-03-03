@@ -46,7 +46,15 @@ setTimeout(function () {
   //     console.log('Host Data:', data)
   //   }
   // });
-  hostmachine.getFieldTime(0, function (err, data) {
+  // hostmachine.getFieldTime(0, function (err, data) {
+  //   if (err) {
+  //     console.log('Host Error:', err)
+  //   } else {
+  //     console.log('Host Data:', data)
+  //   }
+  // })
+
+  hostmachine.setFieldTime(0, function (err, data) {
     if (err) {
       console.log('Host Error:', err)
     } else {
