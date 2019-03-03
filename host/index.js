@@ -21,13 +21,19 @@ hostmachine.start({
 
 setInterval(function () {
   var machines = hostmachine.getMachines();
-  console.log('\nPrint machines:')
+  console.log('\n--------------------------------------')
+  console.log('Print machines:')
   for (var i = 0; i < machines.length; i++) {
     console.log('No: ', i)
     console.log('id:', machines[i].id)
     console.log('name:', machines[i].name)
     console.log('')
   }
+
+  for (var j = 0; j < hostmachine.sessionCtrl.sessions.lst.length; j++) {
+    console.log(j, '/ session:')
+  }
+  console.log('--------------------------------------\n\n')
 }, 8000);
 
 // send out after 10 seconds

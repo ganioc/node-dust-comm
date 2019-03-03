@@ -3,8 +3,13 @@ var net = require('net')
 var EE = require('events');
 var util = require('util');
 
-var SESSIONCTRL = require('../lib/hj212').SESSIONCTRL
+var HJ212 = require('../lib/hj212')
+
+var SESSIONCTRL = HJ212.SESSIONCTRL
 var SessionClass = SESSIONCTRL.SessionClass;
+var DS = HJ212.DS;
+var COMMON = HJ212.COMMON
+var CP = HJ212.CommandParam
 
 function YHostSessionCtrl(options) {
   EE.call(this);
@@ -19,8 +24,17 @@ function YHostSessionCtrl(options) {
   this.OverTime = 5000;
   this.ReCount = 3;
 
-  this.on('timeout', function (data) {
-    console.log('timeout:', data)
+  this.on('timeout', function (session) {
+    console.log('\nYHostSessionctrl timeout: ----*')
+
+    console.log(session.datasegment)
+  })
+
+  // input data is a datasegment object
+  this.sessions.on('packet', function (dataseg) {
+    console.log('\nReceived valid datasegment')
+
+    // search the sessions list to find the waiting session
   })
 }
 util.inherits(YHostSessionCtrl, EE);
@@ -62,9 +76,11 @@ YHostSessionCtrl.prototype.start = function (options) {
     that.addMachine(connection)
 
     connection.on('data', function (data) {
+      console.log('\n<---')
       console.log('RX', data);
-      var buf = Buffer.from([0x23, 0x23, 0x41, 0x42, 0x43, 0x0D, 0x0A]);
-      connection.write(buf);
+      console.log(data.toString())
+
+      that.sessions.consumeFrame(data);
     });
     connection.on('end', function () {
       console.log('Connection ended');
@@ -95,26 +111,38 @@ YHostSessionCtrl.prototype.start = function (options) {
   })
 }
 
-YHostSessionCtrl.prototype.sendReq = function (indMachine, paramArr, cb) {
+YHostSessionCtrl.prototype.sendReq = function (indMachine, paramObj, cb) {
   var that = this;
-  var packet = SESSIONCTRL.createDataSegmentDownlink(paramArr);
+
+  var ds = DS.createNormalDataSegment()
+  ds.setQN(COMMON.getFormattedTimestamp())
+  ds.setST(COMMON.getSTCode('SURFACE-WATER-ENV-CONTAM'))
+  ds.setCN(COMMON.getDownlinkCNCode('INIT_SETTING_REQ'))
+  ds.setPW(COMMON.PASSWORD)
+  ds.setMN(COMMON.UNIQID)
+  ds.setFlag(COMMON.setFlag(false, true))
+
+  var cp = CP.createCommandParam(paramObj);
+  ds.setCP(cp.output())
+
+  // var packet = SESSIONCTRL.createDataSegmentDownlink(paramArr);
   // send out using indMachine
   this.machines[indMachine].connection.write(
-    SESSIONCTRL.createFrame(packet),
+    SESSIONCTRL.createFrame(ds.output()),
     function () {
-      console.log('packet sent out')
+      console.log('packet sent out\n\n')
     }
   );
 
   // save it to sessions
   this.sessions.addSession({
-    type: 'normal',
-    OverTime: this.OverTime,
-    ReCount: this.ReCount,
+    // type: 'normal',
+    overtime: this.OverTime,
+    recount: this.ReCount,
     callback: cb,
-    id: this.sessions.getId(packet),
-    packet: packet,
-    handle: that
+    datasegment: ds,
+    handle: that,
+    machineKey: that.machines[indMachine].key
   });
 }
 
