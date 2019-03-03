@@ -13,19 +13,32 @@ YMachine.prototype.start = function (options) {
 YMachine.prototype.getMachines = function () {
   return this.sessionCtrl.getMachines()
 }
+// Command finished
 YMachine.prototype.setOvertimeRecount = function (indMachine, cb) {
-  this.sendReq(indMachine, {
+  this.setReq(indMachine, {
     OverTime: 5,
     ReCount: 3
   }, cb);
 }
-
-YMachine.prototype.sendReq = function (indMachine, paramArr, cb) {
+// Command 2
+YMachine.prototype.getFieldTime = function (indMachine, cb) {
+  this.getReq(indMachine, {
+    PolId: 'w01018'
+  }, cb)
+}
+YMachine.prototype.setReq = function (indMachine, paramArr, cb) {
   if (!this.sessionCtrl.checkId(indMachine)) {
     cb(new Error('index machine not exist'))
     return
   }
-  this.sessionCtrl.sendReq(indMachine, paramArr, cb);
+  this.sessionCtrl.setReq(indMachine, paramArr, cb);
+}
+YMachine.prototype.getReq = function (indMachine, objParam, cb) {
+  if (!this.sessionCtrl.checkId(indMachine)) {
+    cb(new Error('index machine not exist'))
+    return
+  }
+  this.sessionCtrl.getReq(indMachine, objParam, cb);
 }
 
 module.exports = {

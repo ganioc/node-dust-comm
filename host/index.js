@@ -30,6 +30,7 @@ setInterval(function () {
     console.log('')
   }
 
+  console.log('\nPrint sessions:')
   for (var j = 0; j < hostmachine.sessionCtrl.sessions.lst.length; j++) {
     console.log(j, '/ session:')
   }
@@ -38,11 +39,18 @@ setInterval(function () {
 
 // send out after 10 seconds
 setTimeout(function () {
-  hostmachine.setOvertimeRecount(0, function (err, data) {
+  // hostmachine.setOvertimeRecount(0, function (err, data) {
+  //   if (err) {
+  //     console.log('Host Error:', err)
+  //   } else {
+  //     console.log('Host Data:', data)
+  //   }
+  // });
+  hostmachine.getFieldTime(0, function (err, data) {
     if (err) {
-      console.log('Error:', err)
+      console.log('Host Error:', err)
     } else {
-      console.log('Data', data)
+      console.log('Host Data:', data)
     }
-  });
+  })
 }, 10000);

@@ -26,6 +26,8 @@ function YClientSessionCtrl() {
     // consider to put it into sessions list
     if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('INIT_SETTING_REQ'))) {
       that.handleInitSettingReq(dataseg)
+    } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_GETTIME_REQ'))) {
+      that.handleGetParamReq(dataseg)
     }
   });
 }
@@ -85,6 +87,23 @@ YClientSessionCtrl.prototype.write = function (buf, cb) {
     cb(new Error('Offline'), null)
   }
 }
+YClientSessionCtrl.prototype.sendExeRtn = function (ds, cb) {
+  var that = this
+  var ds2 = DS.cloneDataSegment(ds)
+  ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
+  var cp = CP.createCommandParam({
+    ExeRtn: 1
+  })
+  ds2.setCP(cp.output())
+  that.write(ds2.createFrame(), function (err, data) {
+    if (err) {
+      console.log(err);
+      return -1
+    }
+    console.log('Send req result')
+    cb()
+  })
+}
 YClientSessionCtrl.prototype.handleInitSettingReq = function (dataseg) {
   var that = this
 
@@ -118,6 +137,43 @@ YClientSessionCtrl.prototype.handleInitSettingReq = function (dataseg) {
         return -1
       }
       console.log('Send req result')
+    })
+  })
+}
+
+YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
+  var that = this
+
+  var newDs = DS.cloneDataSegment(dataseg)
+  newDs.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
+  newDs.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
+  newDs.setFlag(COMMON.setFlag(false, false))
+  var cp = CP.createCommandParam({
+    QNRtn: 1
+  });
+  newDs.setCP(cp.output());
+
+  that.write(newDs.createFrame(), function (err, data) {
+    if (err) {
+      console.log(err);
+      return -1
+    }
+    console.log('Send req rsp')
+  })
+
+  COMMON.getParam(dataseg, function (objCP) {
+    var ds2 = DS.cloneDataSegment(dataseg)
+    // ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
+    ds2.setFlag(COMMON.setFlag(false, false))
+    var cp = CP.createCommandParam(objCP)
+    ds2.setCP(cp.output())
+    that.write(ds2.createFrame(), function (err, data) {
+      if (err) {
+        console.log(err);
+        return -1
+      }
+      console.log('Send 2nd req result')
+      that.sendExeRtn(newDs, function () {});
     })
   })
 }

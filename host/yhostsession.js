@@ -10,6 +10,7 @@ var SessionClass = SESSIONCTRL.SessionClass;
 var DS = HJ212.DS;
 var COMMON = HJ212.COMMON
 var CP = HJ212.CommandParam
+var SESSION = HJ212.SESSION
 
 function YHostSessionCtrl(options) {
   EE.call(this);
@@ -30,15 +31,35 @@ function YHostSessionCtrl(options) {
     console.log('\nYHostSessionctrl timeout: ----*')
 
     console.log(session.datasegment)
+
+    if (session.checkCounter()) {
+      // resend
+      var machine = that.findMachine(session.machineKey);
+      if (machine) {
+        machine.connection.write(session.datasegment.createFrame());
+        console.log('Send out ......')
+      } else {
+        console.log('Cannot find machine')
+      }
+      session.resetState()
+    } else {
+      session.callback(new Error('Error: command failed '), 'NOK')
+      // delete this session
+      that.sessions.deleteSession(session)
+    }
   })
   this.on('finished', function (session) {
     console.log('\nYHostSessionctrl session finished: ----%')
     console.log(session.datasegment)
+    session.callback(null, 'OK, got result')
+
+    // delete this session
+    that.sessions.deleteSession(session)
   })
 
   // input data is a datasegment object
   this.sessions.on('packet', function (dataseg) {
-    console.log('\nReceived valid datasegment ----->')
+    console.log('\nReceived valid datasegment --------------->')
 
     // search the sessions list to find the waiting session
     that.handleDataSegment(dataseg)
@@ -72,6 +93,13 @@ YHostSessionCtrl.prototype.addMachine = function (conn) {
   });
 
   console.log('add ', conn.key)
+}
+YHostSessionCtrl.prototype.findMachine = function (id) {
+  let machine = this.machines.find(function (item) {
+    return id === item.id
+  })
+  if (machine) return machine
+  else return undefined
 }
 
 YHostSessionCtrl.prototype.start = function (options) {
@@ -118,7 +146,7 @@ YHostSessionCtrl.prototype.start = function (options) {
   })
 }
 
-YHostSessionCtrl.prototype.sendReq = function (indMachine, paramObj, cb) {
+YHostSessionCtrl.prototype.setReq = function (indMachine, paramObj, cb) {
   var that = this;
 
   var ds = DS.createNormalDataSegment()
@@ -143,7 +171,40 @@ YHostSessionCtrl.prototype.sendReq = function (indMachine, paramObj, cb) {
 
   // save it to sessions
   this.sessions.addSession({
-    // type: 'normal',
+    type: SESSION.TYPE.INIT_SET,
+    overtime: COMMON.OVERTIME,
+    recount: COMMON.RECOUNT,
+    callback: cb,
+    datasegment: ds,
+    handle: that,
+    machineKey: that.machines[indMachine].key
+  });
+}
+YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb) {
+  var that = this;
+
+  var ds = DS.createNormalDataSegment()
+  ds.setQN(COMMON.getFormattedTimestamp())
+  ds.setST(COMMON.getSTCode('SURFACE-WATER-ENV-CONTAM'))
+  ds.setCN(COMMON.getDownlinkCNCode('PARAM_GETTIME_REQ'))
+  ds.setPW(COMMON.PASSWORD)
+  ds.setMN(COMMON.UNIQID)
+  ds.setFlag(COMMON.setFlag(false, true))
+
+  var cp = CP.createCommandParam(paramObj);
+  ds.setCP(cp.output())
+
+  // send out using indMachine
+  this.machines[indMachine].connection.write(
+    ds.createFrame(),
+    function () {
+      console.log('packet sent out\n\n')
+    }
+  );
+
+  // save it to sessions
+  this.sessions.addSession({
+    type: SESSION.TYPE.PARAM_GET,
     overtime: COMMON.OVERTIME,
     recount: COMMON.RECOUNT,
     callback: cb,
