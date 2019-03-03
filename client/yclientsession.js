@@ -80,6 +80,7 @@ YClientSessionCtrl.prototype.start = function (options) {
 YClientSessionCtrl.prototype.write = function (buf, cb) {
   if (this.bConnected) {
     this.socket.write(buf, function () {
+      console.log('send out ==================== >')
       cb(null, 'OK')
     });
   } else {
@@ -176,34 +177,6 @@ YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
       that.sendExeRtn(newDs, function () {});
     })
   })
-}
-YClientSessionCtrl.prototype.handleDS = function (ds) {
-  // consider to put it into session list
-  ds.setST(COMMON.getSTCode('SYSTEM-INTERACT'));
-  ds.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
-  ds.setFlag(COMMON.setFlag(false, false))
-  var cp = CP.createCommandParam({
-    QNRtn: 1
-  });
-  ds.setCP(cp.output())
-
-  this.write(SESSIONCTRL.createFrame(ds.output()),
-    function () {
-      console.log('packet sent out\n\n')
-    }
-  );
-  // start to handle the command and give result
-
-  ds.setCN(COMMON.getUplinkCNCode('CMD_RESP'));
-  cp = CP.createCommandParam({
-    ExeRtn: 1
-  })
-  ds.setCP(cp.output());
-
-  this.write(SESSIONCTRL.createFrame(ds.output()),
-    function () {
-      console.log('packet sent out\n\n')
-    })
 }
 
 module.exports = {
