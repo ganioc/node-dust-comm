@@ -61,4 +61,11 @@ setTimeout(function () {
   //     console.log('Host Data:', data)
   //   }
   // })
+  hostmachine.getRTDataInterval(0, function (err, data) {
+    if (err) {
+      console.log('Host Error:', err)
+    } else {
+      console.log('Host Data:', data)
+    }
+  })
 }, 10000);

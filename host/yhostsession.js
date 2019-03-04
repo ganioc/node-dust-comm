@@ -51,7 +51,7 @@ function YHostSessionCtrl(options) {
   this.on('finished', function (session) {
     console.log('\nYHostSessionctrl session finished: ----%')
     console.log(session.datasegment)
-    session.callback(null, 'OK, got result')
+    session.callback(null, session.result)
 
     // delete this session
     that.sessions.deleteSession(session)
@@ -217,19 +217,19 @@ YHostSessionCtrl.prototype.setParam = function (indMachine, paramObj, cb) {
   });
 }
 
-YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb) {
+YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb, stcode, cncode) {
   var that = this;
 
   var ds = DS.createNormalDataSegment()
   ds.setQN(COMMON.getFormattedTimestamp())
-  ds.setST(COMMON.getSTCode('SURFACE-WATER-ENV-CONTAM'))
-  ds.setCN(COMMON.getDownlinkCNCode('PARAM_GETTIME_REQ'))
+  ds.setST(COMMON.getSTCode(stcode))
+  ds.setCN(COMMON.getDownlinkCNCode(cncode))
   ds.setPW(COMMON.PASSWORD)
   ds.setMN(COMMON.UNIQID)
   ds.setFlag(COMMON.setFlag(false, true))
 
-  var cp = CP.createCommandParam(paramObj);
-  ds.setCP(cp.output())
+  // var cp = CP.createCommandParam(paramObj);
+  ds.setCP(CP.flatParam(paramObj))
 
   // send out using indMachine
   this.machines[indMachine].connection.write(

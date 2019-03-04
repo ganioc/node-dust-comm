@@ -11,6 +11,8 @@ YClient.prototype.start = function (options) {
   this.sessionCtrl.start(options)
 }
 
+// --------------------------------------------------
+// Command 4
 YClient.prototype.timeCalNotify = function (cb) {
   this.notify({
     PolId: 'w01018'

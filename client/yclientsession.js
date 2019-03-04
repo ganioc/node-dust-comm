@@ -38,7 +38,7 @@ function YClientSessionCtrl() {
   this.on('finished', function (session) {
     console.log('\nYClientSessionctrl session finished: -----%')
     console.log(session.datasegment)
-    session.callback(null, 'OK, got result')
+    session.callback(null, session.result)
 
     that.sessions.deleteSession(session)
   })
@@ -55,7 +55,8 @@ function YClientSessionCtrl() {
     // consider to put it into sessions list
     if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('INIT_SETTING_REQ'))) {
       that.handleInitSettingReq(dataseg)
-    } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_GETTIME_REQ'))) {
+    } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_GETTIME_REQ')) ||
+      COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_GETRTDATA_INTERVAL_REQ'))) {
       that.handleGetParamReq(dataseg)
     } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_SETTIME_REQ'))) {
       that.handleSetParam(dataseg)
@@ -185,10 +186,12 @@ YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
   newDs.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
   newDs.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
   newDs.setFlag(COMMON.setFlag(false, false))
-  var cp = CP.createCommandParam({
+  // var cp = CP.createCommandParam({
+  //   QNRtn: 1
+  // });
+  newDs.setCP(CP.flatParam({
     QNRtn: 1
-  });
-  newDs.setCP(cp.output());
+  }));
 
   that.write(newDs.createFrame(), function (err, data) {
     if (err) {
@@ -202,8 +205,8 @@ YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
     var ds2 = DS.cloneDataSegment(dataseg)
     // ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
     ds2.setFlag(COMMON.setFlag(false, false))
-    var cp = CP.createCommandParam(objCP)
-    ds2.setCP(cp.output())
+    // var cp = CP.createCommandParam(objCP)
+    ds2.setCP(CP.flatParam(objCP))
     that.write(ds2.createFrame(), function (err, data) {
       if (err) {
         console.log(err);

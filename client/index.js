@@ -25,12 +25,12 @@ setInterval(function () {
   console.log('--------------------------------------\n\n')
 }, 8000);
 
-setTimeout(function () {
-  machine.timeCalNotify(function (err, data) {
-    if (err) {
-      console.log('Can not get notify feedback')
-      console.log(err)
-    }
-    console.log('Notify succeed!')
-  })
-}, 8000)
+// setTimeout(function () {
+//   machine.timeCalNotify(function (err, data) {
+//     if (err) {
+//       console.log('Can not get notify feedback')
+//       console.log(err)
+//     }
+//     console.log('Notify succeed!')
+//   })
+// }, 8000)

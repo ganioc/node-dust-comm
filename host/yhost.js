@@ -13,7 +13,8 @@ YMachine.prototype.start = function (options) {
 YMachine.prototype.getMachines = function () {
   return this.sessionCtrl.getMachines()
 }
-// Command finished
+// -------------------------------------------------------
+// Command 1 finished
 YMachine.prototype.setOvertimeRecount = function (indMachine, cb) {
   this.setReq(indMachine, {
     OverTime: 5,
@@ -24,13 +25,20 @@ YMachine.prototype.setOvertimeRecount = function (indMachine, cb) {
 YMachine.prototype.getFieldTime = function (indMachine, cb) {
   this.getReq(indMachine, {
     PolId: 'w01018'
-  }, cb)
+  }, cb, 'SURFACE-WATER-ENV-CONTAM', 'PARAM_GETTIME_REQ')
 }
+
+// Command 3
 YMachine.prototype.setFieldTime = function (indMachine, cb) {
   this.setParam(indMachine, {
     PolId: 'w01018',
     SystemTime: '20160801085857'
   }, cb)
+}
+
+// Command 5
+YMachine.prototype.getRTDataInterval = function (indMachine, cb) {
+  this.getReq(indMachine, {}, cb, 'SURFACE-WATER-ENV-CONTAM', 'PARAM_GETRTDATA_INTERVAL_REQ')
 }
 
 // ---------------------------------------------------------------
@@ -55,11 +63,11 @@ YMachine.prototype.setParam = function (indMachine, paramObj, cb) {
   }
   this.sessionCtrl.setParam(indMachine, paramObj, cb);
 }
-YMachine.prototype.getReq = function (indMachine, objParam, cb) {
+YMachine.prototype.getReq = function (indMachine, objParam, cb, stcode, cncode) {
   if (!this.checkIndMachine(indMachine)) {
     return
   }
-  this.sessionCtrl.getReq(indMachine, objParam, cb);
+  this.sessionCtrl.getReq(indMachine, objParam, cb, stcode, cncode);
 }
 
 module.exports = {
