@@ -11,6 +11,17 @@ YClient.prototype.start = function (options) {
   this.sessionCtrl.start(options)
 }
 
+YClient.prototype.timeCalNotify = function (cb) {
+  this.notify({
+    PolId: 'w01018'
+  }, cb)
+}
+// ----------------------------------------------------
+
+YClient.prototype.notify = function (paramObj, cb) {
+  this.sessionCtrl.notify(paramObj, cb)
+}
+
 module.exports = {
   YClient: YClient
 }

@@ -1,5 +1,7 @@
 'use strict'
 
+var EE = require('events');
+var util = require('util');
 var net = require('net')
 var HJ212 = require('../lib/hj212')
 var SESSIONCTRL = HJ212.SESSIONCTRL;
@@ -7,8 +9,10 @@ var SessionClass = SESSIONCTRL.SessionClass
 var COMMON = HJ212.COMMON
 var CP = HJ212.CommandParam
 var DS = HJ212.DS
+var SESSION = HJ212.SESSION
 
 function YClientSessionCtrl() {
+  EE.call(this);
   this.name = 'yclientsessionctrl'
   this.socket = new net.Socket();
   this.bConnected = false;
@@ -16,8 +20,33 @@ function YClientSessionCtrl() {
 
   var that = this;
 
+  this.on('timeout', function (session) {
+    console.log('\nYClientSessionctrl timeout: ------*')
+    console.log(session.datasegment)
+
+    if (session.checkCounter()) {
+      that.write(session.datasegment.createFrame());
+      console.log('reSend out ...... ============>')
+      session.resetState()
+    } else {
+      session.callback(new Error('Error: command failed '), 'NOK')
+      // delete this session
+      that.sessions.deleteSession(session)
+    }
+  })
+
+  this.on('finished', function (session) {
+    console.log('\nYClientSessionctrl session finished: -----%')
+    console.log(session.datasegment)
+    session.callback(null, 'OK, got result')
+
+    that.sessions.deleteSession(session)
+  })
+
   // input data is a datasegment object
-  this.sessions.on('packet', function (dataseg) {
+  this.sessions.on('packet', function (indata) {
+    var dataseg = indata.ds;
+    // var connKey = indata.connKey;
     console.log('\nReceived valid datasegment')
 
     // if it is a waiting session , do it
@@ -30,11 +59,14 @@ function YClientSessionCtrl() {
       that.handleGetParamReq(dataseg)
     } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('PARAM_SETTIME_REQ'))) {
       that.handleSetParam(dataseg)
+    } else if (COMMON.equal(dataseg.CN, COMMON.getDownlinkCNCode('NOTIFY_RESP'))) {
+      that.handleNotifyRsp(dataseg)
     } else {
       throw new Error('Un recognized CN')
     }
   });
 }
+util.inherits(YClientSessionCtrl, EE);
 
 YClientSessionCtrl.prototype.start = function (options) {
   var that = this;
@@ -56,7 +88,7 @@ YClientSessionCtrl.prototype.start = function (options) {
     console.log(data.toString())
 
     // Wait for EventEmitter to send back datasegment
-    that.sessions.consumeFrame(data)
+    that.sessions.consumeFrame(data, '')
 
     // act according to datasegment
     // that.handleDS(ds)
@@ -219,6 +251,50 @@ YClientSessionCtrl.prototype.handleSetParam = function (dataseg) {
     })
   })
 }
+YClientSessionCtrl.prototype.handleNotifyRsp = function (dataseg) {
+  var that = this
+
+  var session = that.sessions.findSession(dataseg);
+
+  if (session) {
+    console.log('find session of notify')
+    session.handle(dataseg)
+  } else {
+    console.log('Cannot find session waiting for notifyRsp')
+  }
+}
+// --------------------------------------------------------
+
+YClientSessionCtrl.prototype.notify = function (paramObj, cb) {
+  var that = this
+
+  var ds = DS.createNormalDataSegment();
+  ds.setQN(COMMON.getFormattedTimestamp())
+  ds.setST(COMMON.getSTCode('SURFACE-WATER-ENV-CONTAM'))
+  ds.setCN(COMMON.getUplinkCNCode('PARAM_TIMECAL_NOTIFY'))
+  ds.setPW(COMMON.PASSWORD)
+  ds.setMN(COMMON.UNIQID)
+  ds.setFlag(COMMON.setFlag(false, true))
+  ds.setCP(CP.flatParam(paramObj))
+
+  that.write(ds.createFrame(), function (err, data) {
+    if (err) {
+      console.log(err);
+      return -1
+    }
+    console.log('Send req ===============================>')
+  })
+  that.sessions.addNotifySession({
+    type: SESSION.TYPE.NOTIFY_UPLINK,
+    overtime: COMMON.OVERTIME,
+    recount: COMMON.RECOUNT,
+    callback: cb,
+    datasegment: ds,
+    handle: that,
+    machineKey: ''
+  })
+}
+
 module.exports = {
   YClientSessionCtrl: YClientSessionCtrl
 }

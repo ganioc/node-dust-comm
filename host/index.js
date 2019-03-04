@@ -21,7 +21,7 @@ hostmachine.start({
 
 setInterval(function () {
   var machines = hostmachine.getMachines();
-  console.log('\n--------------------------------------')
+  console.log('--------------------------------------')
   console.log('Print machines:')
   for (var i = 0; i < machines.length; i++) {
     console.log('No: ', i)
@@ -54,11 +54,11 @@ setTimeout(function () {
   //   }
   // })
 
-  hostmachine.setFieldTime(0, function (err, data) {
-    if (err) {
-      console.log('Host Error:', err)
-    } else {
-      console.log('Host Data:', data)
-    }
-  })
+  // hostmachine.setFieldTime(0, function (err, data) {
+  //   if (err) {
+  //     console.log('Host Error:', err)
+  //   } else {
+  //     console.log('Host Data:', data)
+  //   }
+  // })
 }, 10000);

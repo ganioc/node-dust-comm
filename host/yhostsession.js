@@ -37,7 +37,7 @@ function YHostSessionCtrl(options) {
       var machine = that.findMachine(session.machineKey);
       if (machine) {
         machine.connection.write(session.datasegment.createFrame());
-        console.log('Send out ......')
+        console.log('reSend out ...... ===============>')
       } else {
         console.log('Cannot find machine')
       }
@@ -58,11 +58,13 @@ function YHostSessionCtrl(options) {
   })
 
   // input data is a datasegment object
-  this.sessions.on('packet', function (dataseg) {
+  this.sessions.on('packet', function (indata) {
     console.log('\nReceived valid datasegment --------------->')
 
+    var dataseg = indata.ds;
+    var connKey = indata.connKey
     // search the sessions list to find the waiting session
-    that.handleDataSegment(dataseg)
+    that.handleDataSegment(dataseg, connKey)
   })
 }
 util.inherits(YHostSessionCtrl, EE);
@@ -111,11 +113,11 @@ YHostSessionCtrl.prototype.start = function (options) {
     that.addMachine(connection)
 
     connection.on('data', function (data) {
-      console.log('\n<---')
+      console.log('\n<-----------------')
       console.log('RX', data);
       console.log(data.toString())
 
-      that.sessions.consumeFrame(data);
+      that.sessions.consumeFrame(data, connection.key)
     });
     connection.on('end', function () {
       console.log('Connection ended');
@@ -165,7 +167,7 @@ YHostSessionCtrl.prototype.setReq = function (indMachine, paramObj, cb) {
   this.machines[indMachine].connection.write(
     ds.createFrame(),
     function () {
-      console.log('packet sent out\n\n')
+      console.log('packet sent out====================>\n\n')
     }
   );
 
@@ -199,7 +201,7 @@ YHostSessionCtrl.prototype.setParam = function (indMachine, paramObj, cb) {
   this.machines[indMachine].connection.write(
     ds.createFrame(),
     function () {
-      console.log('packet sent out\n\n')
+      console.log('packet sent out====================>\n\n')
     }
   );
 
@@ -233,7 +235,7 @@ YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb) {
   this.machines[indMachine].connection.write(
     ds.createFrame(),
     function () {
-      console.log('packet sent out\n\n')
+      console.log('packet sent out====================>\n\n')
     }
   );
 
@@ -248,7 +250,7 @@ YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb) {
     machineKey: that.machines[indMachine].key
   });
 }
-YHostSessionCtrl.prototype.handleDataSegment = function (ds) {
+YHostSessionCtrl.prototype.handleDataSegment = function (ds, connKey) {
   console.log('\nHandle received datasegment')
   let session = this.sessions.findSession(ds)
   if (session) {
@@ -257,8 +259,36 @@ YHostSessionCtrl.prototype.handleDataSegment = function (ds) {
     session.handle(ds)
   } else {
     console.log('Cannot find datasegment')
+    this.handleFreshDataSegment(ds, connKey)
   }
 }
+
+YHostSessionCtrl.prototype.handleFreshDataSegment = function (ds, connKey) {
+  if (COMMON.equal(ds.CN, COMMON.getUplinkCNCode('PARAM_TIMECAL_NOTIFY'))) {
+    this.handleTimeCalNotify(ds, connKey)
+  } else {
+    throw new Error('Unrecognized CN from uplink')
+  }
+}
+YHostSessionCtrl.prototype.handleTimeCalNotify = function (datasegment, connKey) {
+  var that = this;
+
+  var ds = DS.cloneDataSegment(datasegment);
+  ds.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
+  ds.setCN(COMMON.getDownlinkCNCode('NOTIFY_RESP'))
+  ds.setFlag(COMMON.setFlag(true, true))
+  ds.setCP('')
+
+  var machine = that.findMachine(connKey)
+  if (machine) {
+    machine.connection.write(ds.createFrame(), function () {
+      console.log('Send out ============================>')
+    });
+  } else {
+    console.log('Cannot find the machine for feedback')
+  }
+}
+
 module.exports = {
   YHostSessionCtrl: YHostSessionCtrl
 }

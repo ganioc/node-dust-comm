@@ -32,23 +32,31 @@ YMachine.prototype.setFieldTime = function (indMachine, cb) {
     SystemTime: '20160801085857'
   }, cb)
 }
-YMachine.prototype.setReq = function (indMachine, paramObj, cb) {
+
+// ---------------------------------------------------------------
+YMachine.prototype.checkIndMachine = function (indMachine, cb) {
   if (!this.sessionCtrl.checkId(indMachine)) {
     cb(new Error('index machine not exist'))
+    return false
+  }
+  return true
+}
+YMachine.prototype.setReq = function (indMachine, paramObj, cb) {
+  if (!this.checkIndMachine(indMachine)) {
     return
   }
+
   this.sessionCtrl.setReq(indMachine, paramObj, cb);
 }
+
 YMachine.prototype.setParam = function (indMachine, paramObj, cb) {
-  if (!this.sessionCtrl.checkId(indMachine)) {
-    cb(new Error('index machine not exist'))
+  if (!this.checkIndMachine(indMachine)) {
     return
   }
   this.sessionCtrl.setParam(indMachine, paramObj, cb);
 }
 YMachine.prototype.getReq = function (indMachine, objParam, cb) {
-  if (!this.sessionCtrl.checkId(indMachine)) {
-    cb(new Error('index machine not exist'))
+  if (!this.checkIndMachine(indMachine)) {
     return
   }
   this.sessionCtrl.getReq(indMachine, objParam, cb);
