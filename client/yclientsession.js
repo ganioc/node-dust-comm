@@ -4,7 +4,7 @@ var EE = require('events');
 var util = require('util');
 var net = require('net')
 var HJ212 = require('../lib/hj212')
-var SESSIONCTRL = HJ212.SESSIONCTRL;
+var SESSIONCTRL = HJ212.SESSIONCTRL
 var SessionClass = SESSIONCTRL.SessionClass
 var COMMON = HJ212.COMMON
 var CP = HJ212.CommandParam
@@ -46,10 +46,9 @@ function YClientSessionCtrl() {
   // input data is a datasegment object
   this.sessions.on('packet', function (indata) {
     var dataseg = indata.ds;
-    // var connKey = indata.connKey;
+
     console.log('\nReceived valid datasegment')
 
-    // if it is a waiting session , do it
     console.log('datasegment:', dataseg)
 
     // consider to put it into sessions list
@@ -65,7 +64,7 @@ function YClientSessionCtrl() {
     } else {
       throw new Error('Un recognized CN')
     }
-  });
+  })
 }
 util.inherits(YClientSessionCtrl, EE);
 
@@ -90,10 +89,8 @@ YClientSessionCtrl.prototype.start = function (options) {
 
     // Wait for EventEmitter to send back datasegment
     that.sessions.consumeFrame(data, '')
+  })
 
-    // act according to datasegment
-    // that.handleDS(ds)
-  });
   this.socket.on('end', function () {
     console.log('ended from host');
   })
@@ -129,10 +126,10 @@ YClientSessionCtrl.prototype.sendExeRtn = function (ds, cb) {
   var that = this
   var ds2 = DS.cloneDataSegment(ds)
   ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
-  var cp = CP.createCommandParam({
+
+  ds2.setCP(CP.flatParam({
     ExeRtn: 1
-  })
-  ds2.setCP(cp.output())
+  }))
   that.write(ds2.createFrame(), function (err, data) {
     if (err) {
       console.log(err);
@@ -149,10 +146,10 @@ YClientSessionCtrl.prototype.handleInitSettingReq = function (dataseg) {
   newDs.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
   newDs.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
   newDs.setFlag(COMMON.setFlag(false, false))
-  var cp = CP.createCommandParam({
+
+  newDs.setCP(CP.flatParam({
     QNRtn: 1
-  });
-  newDs.setCP(cp.output());
+  }));
 
   that.write(newDs.createFrame(), function (err, data) {
     if (err) {
@@ -165,10 +162,10 @@ YClientSessionCtrl.prototype.handleInitSettingReq = function (dataseg) {
   COMMON.setInitSetting(dataseg, function () {
     var ds2 = DS.cloneDataSegment(newDs)
     ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
-    var cp = CP.createCommandParam({
+
+    ds2.setCP(CP.flatParam({
       ExeRtn: 1
-    })
-    ds2.setCP(cp.output())
+    }))
     that.write(ds2.createFrame(), function (err, data) {
       if (err) {
         console.log(err);
@@ -186,12 +183,10 @@ YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
   newDs.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
   newDs.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
   newDs.setFlag(COMMON.setFlag(false, false))
-  // var cp = CP.createCommandParam({
-  //   QNRtn: 1
-  // });
+
   newDs.setCP(CP.flatParam({
     QNRtn: 1
-  }));
+  }))
 
   that.write(newDs.createFrame(), function (err, data) {
     if (err) {
@@ -203,10 +198,10 @@ YClientSessionCtrl.prototype.handleGetParamReq = function (dataseg) {
 
   COMMON.getParam(dataseg, function (objCP) {
     var ds2 = DS.cloneDataSegment(dataseg)
-    // ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
+
     ds2.setFlag(COMMON.setFlag(false, false))
-    // var cp = CP.createCommandParam(objCP)
     ds2.setCP(CP.flatParam(objCP))
+
     that.write(ds2.createFrame(), function (err, data) {
       if (err) {
         console.log(err);
@@ -225,10 +220,10 @@ YClientSessionCtrl.prototype.handleSetParam = function (dataseg) {
   newDs.setST(COMMON.getSTCode('SYSTEM-INTERACT'))
   newDs.setCN(COMMON.getUplinkCNCode('REQ_RESP'))
   newDs.setFlag(COMMON.setFlag(false, false))
-  var cp = CP.createCommandParam({
+
+  newDs.setCP(CP.flatParam({
     QNRtn: 1
-  });
-  newDs.setCP(cp.output());
+  }));
 
   that.write(newDs.createFrame(), function (err, data) {
     if (err) {
@@ -241,13 +236,13 @@ YClientSessionCtrl.prototype.handleSetParam = function (dataseg) {
   COMMON.setParam(dataseg, function () {
     var ds2 = DS.cloneDataSegment(newDs)
     ds2.setCN(COMMON.getUplinkCNCode('CMD_RESP'))
-    var cp = CP.createCommandParam({
+
+    ds2.setCP(CP.flatParam({
       ExeRtn: 1
-    })
-    ds2.setCP(cp.output())
+    }))
     that.write(ds2.createFrame(), function (err, data) {
       if (err) {
-        console.log(err);
+        console.log(err)
         return -1
       }
       console.log('Send req result')
@@ -282,7 +277,7 @@ YClientSessionCtrl.prototype.notify = function (paramObj, cb) {
 
   that.write(ds.createFrame(), function (err, data) {
     if (err) {
-      console.log(err);
+      console.log(err)
       return -1
     }
     console.log('Send req ===============================>')

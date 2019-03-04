@@ -42,11 +42,10 @@ ds.setPW('123456')
 ds.setMN(common.UNIQID)
 ds.setFlag(common.setFlag(false, true))
 
-var cp = CP.createCommandParam();
-cp.add('OverTime', '5');
-cp.add('ReCount', 3)
-
-ds.setCP(cp)
+ds.setCP(CP.flatParam({
+  OverTime: 5,
+  ReCount: 3
+}))
 
 console.log(ds.output())
 var obj2Data = DS.parseDataSegment(ds.output())
@@ -61,7 +60,7 @@ dslong.setMN(common.UNIQID)
 dslong.setFlag(common.setFlag(false, true))
 dslong.setPNUM('3')
 dslong.setPNO(1);
-dslong.setCP(CP.createCommandParam({
+dslong.setCP(CP.flatParam({
   OverTime: 5,
   ReCount: 3
 }));

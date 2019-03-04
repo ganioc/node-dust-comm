@@ -9,16 +9,6 @@ hostmachine.start({
   PORT: PORT
 })
 
-// setTimeout(function () {
-//   hostmachine.setOvertimeRecount(0, function (err, data) {
-//     if (err) {
-//       console.log('Error:', err)
-//     } else {
-//       console.log(data)
-//     }
-//   })
-// }, 8000);
-
 setInterval(function () {
   var machines = hostmachine.getMachines();
   console.log('--------------------------------------')
@@ -35,7 +25,7 @@ setInterval(function () {
     console.log(j, '/ session:')
   }
   console.log('--------------------------------------\n\n')
-}, 8000);
+}, 8000)
 
 // send out after 10 seconds
 setTimeout(function () {

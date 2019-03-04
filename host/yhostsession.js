@@ -6,8 +6,8 @@ var util = require('util');
 var HJ212 = require('../lib/hj212')
 
 var SESSIONCTRL = HJ212.SESSIONCTRL
-var SessionClass = SESSIONCTRL.SessionClass;
-var DS = HJ212.DS;
+var SessionClass = SESSIONCTRL.SessionClass
+var DS = HJ212.DS
 var COMMON = HJ212.COMMON
 var CP = HJ212.CommandParam
 var SESSION = HJ212.SESSION
@@ -83,7 +83,7 @@ YHostSessionCtrl.prototype.removeMachine = function (id) {
   }
 }
 YHostSessionCtrl.prototype.getMachines = function () {
-  return this.machines;
+  return this.machines
 }
 YHostSessionCtrl.prototype.addMachine = function (conn) {
   conn.key = conn.remoteAddress + ':' + conn.remotePort
@@ -159,10 +159,8 @@ YHostSessionCtrl.prototype.setReq = function (indMachine, paramObj, cb) {
   ds.setMN(COMMON.UNIQID)
   ds.setFlag(COMMON.setFlag(false, true))
 
-  var cp = CP.createCommandParam(paramObj);
-  ds.setCP(cp.output())
+  ds.setCP(CP.flatParam(paramObj))
 
-  // var packet = SESSIONCTRL.createDataSegmentDownlink(paramArr);
   // send out using indMachine
   this.machines[indMachine].connection.write(
     ds.createFrame(),
@@ -194,8 +192,7 @@ YHostSessionCtrl.prototype.setParam = function (indMachine, paramObj, cb) {
   ds.setMN(COMMON.UNIQID)
   ds.setFlag(COMMON.setFlag(false, true))
 
-  var cp = CP.createCommandParam(paramObj);
-  ds.setCP(cp.output())
+  ds.setCP(CP.flatParam(paramObj))
 
   // send out using indMachine
   this.machines[indMachine].connection.write(
@@ -228,7 +225,6 @@ YHostSessionCtrl.prototype.getReq = function (indMachine, paramObj, cb, stcode, 
   ds.setMN(COMMON.UNIQID)
   ds.setFlag(COMMON.setFlag(false, true))
 
-  // var cp = CP.createCommandParam(paramObj);
   ds.setCP(CP.flatParam(paramObj))
 
   // send out using indMachine
